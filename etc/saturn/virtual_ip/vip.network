@@ -1,0 +1,7 @@
+[Match]
+Name=vip
+
+[Network]
+Address=<VIRTUAL_IP>
+Mask=255.255.255.255
+Broadcast=<VIRTUAL_IP_BROADCAST>

@@ -1,14 +1,22 @@
 #!/bin/bash
 
+# --------------------- changes here -------------------------
 # Set IP-Address of Nodes that should be in the saturn cluster
 node1="<NODE_1_IPv4>"
 node2="<NODE_2_IPv4>"
 
-# Tell the system what ETCD nodes are in the ETCD cluster
-export ETCDCTL_ENDPOINTS="http://$node1:2379,http://$node2:2379"
+virtual_ip="<VIRTUAL_IP>"
 
 # Tell where data-dir of Samba share is
 dataDir="<FULL_PATH_SAMBA_DIR>"
+# ------------------------------------------------------------
+
+
+# Tell the system what ETCD nodes are in the ETCD cluster
+export ETCDCTL_ENDPOINTS="http://$node1:2379,http://$node2:2379"
+
+# Get current leader
+old_leader=$(etcdctl member list | grep "isLeader=true" | awk -F: '{print $2}' | awk '{print $1}' | cut -c 6-)
 
 function log_func {
   # Get the current date
@@ -74,31 +82,60 @@ function cryptoCheck {
   fi
 }
 
+function leaderChanged {
+  curr_leader=$(etcdctl member list | grep "isLeader=true" | awk -F: '{print $2}' | awk '{print $1}' | cut -c 6-)
+
+  if [ $old_leader != $curr_leader ]; then
+    isLeader
+    if [ $? -eq 0 ]; then
+      promote
+      echo "$current_date: Promoting $curr_leader" >> $logfile
+    else
+      demote
+      echo "$current_date: Demoting $old_leader" >> $logfile
+    fi
+    old_leader=$curr_leader
+  else
+    return
+  fi
+}
+
 function syncStandby {
   rsync -av --perms --delete $dataDir root@$(etcdctl member list | grep "isLeader=false" | awk -F: '{print $2}' | awk '{print $1}' | cut -c 6-):$dataDir >> $rsynclog
 }
 
-function check_health {
-  # Get the status of all nodes in the etcd cluster
-  cluster_status=$(etcdctl endpoint health)
-
-  # Check if all nodes are healthy
-  if [[ $cluster_status =~ "unhealthy" ]]; then
-    echo "Some nodes are unhealthy." >> "$logfile"
+function enableVIP {
+  if [ ! -f "/etc/systemd/network/vip.*" ]; then
+    cp /etc/saturn/virtual_ip/vip.* /etc/systemd/network/
+    systemctl restart systemd-networkd
   else
-    echo "All nodes are healthy." >> "$logfile"
+    systemctl restart systemd-networkd
   fi
 }
 
+function disableVIP {
+  ip link delete vip
+}
+
+function promote {
+  enableVIP
+  systemctl start smbd.service
+}
+
+function demote {
+  disableVIP
+  systemctl stop smbd.service
+}
+
 while true; do
+  leaderChanged
   log_func
   isLeader
   if [[ $? -eq 0 ]]; then
     cryptoCheck
-    if [[ $? -eq 10 ]]; then
+    if [[ $? -eq 0 ]]; then
       syncStandby
     fi
   fi
-#  sleep 1
-  # check_health
+  sleep 1
 done

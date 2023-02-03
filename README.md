@@ -8,5 +8,8 @@ It leverages the etcd distributed key-value store to get a leader in the cluster
 ### How to use Saturn?
 
 ### Prerequirements
+- etcd (v2 API) installed and configured
+- rsync installed
+- 2 nodes that are reachable
 
 ### Configure Saturn
