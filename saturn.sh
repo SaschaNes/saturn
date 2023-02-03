@@ -5,6 +5,8 @@
 node1="<NODE_1_IPv4>"
 node2="<NODE_2_IPv4>"
 
+# Set details of virtual ip /IP itself, subnet in cidr notation,
+# and the interface that should be used
 virtual_ip="<VIRTUAL_IP>"
 subnet_cidr="<SUBNET_FROM_VIP>"
 interface="<INTERFACE_FOR_VIP>"
@@ -31,6 +33,7 @@ function log_func {
   # Retention policy: delete logs older than 7 days
   find /var/log/saturn/ -type f -mtime +7 -delete
 
+  # check if logfiles are already created, if not create them
   if [ ! -f "$logfile" ]; then
     touch "$logfile"
     echo "Created log file $logfile" >> "$logfile"
@@ -85,8 +88,15 @@ function cryptoCheck {
 }
 
 function leaderChanged {
+  # get current leader
   curr_leader=$(etcdctl member list | grep "isLeader=true" | awk -F: '{print $2}' | awk '{print $1}' | cut -c 6-)
 
+  # check if old_leader at start is a different one than now
+  # check if new leader is current host
+  # if yes: promote current host
+  # if no : demoting current host
+  # after, set current leader als old leader
+  # if leader same: skip
   if [ $old_leader != $curr_leader ]; then
     isLeader
     if [ $? -eq 0 ]; then
@@ -103,23 +113,28 @@ function leaderChanged {
 }
 
 function syncStandby {
+  # send changed files with rsync to standby node
   rsync -av --perms --delete $dataDir root@$(etcdctl member list | grep "isLeader=false" | awk -F: '{print $2}' | awk '{print $1}' | cut -c 6-):$dataDir >> $rsynclog
 }
 
 function enableVIP {
+  # add virtual ip to using interface
   ip address add $virtual_ip/$subnet_cidr dev $interface
 }
 
 function disableVIP {
+  # remove virtual ip from using interface
   ip address delete $virtual_ip/$subnet_cidr dev $interface
 }
 
 function promote {
+  # set virtual ip on new leader and start samba
   enableVIP
   systemctl start smbd.service
 }
 
 function demote {
+  # remove virtual ip of old leader and stop samba
   disableVIP
   systemctl stop smbd.service
 }
