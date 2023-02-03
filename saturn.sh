@@ -6,6 +6,8 @@ node1="<NODE_1_IPv4>"
 node2="<NODE_2_IPv4>"
 
 virtual_ip="<VIRTUAL_IP>"
+subnet_cidr="<SUBNET_FROM_VIP>"
+interface="<INTERFACE_FOR_VIP>"
 
 # Tell where data-dir of Samba share is
 dataDir="<FULL_PATH_SAMBA_DIR>"
@@ -105,16 +107,11 @@ function syncStandby {
 }
 
 function enableVIP {
-  if [ ! -f "/etc/systemd/network/vip.*" ]; then
-    cp /etc/saturn/virtual_ip/vip.* /etc/systemd/network/
-    systemctl restart systemd-networkd
-  else
-    systemctl restart systemd-networkd
-  fi
+  ip address add $virtual_ip/$subnet_cidr dev $interface
 }
 
 function disableVIP {
-  ip link delete vip
+  ip address delete $virtual_ip/$subnet_cidr dev $interface
 }
 
 function promote {
