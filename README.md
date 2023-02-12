@@ -10,6 +10,6 @@ It leverages the etcd distributed key-value store to get a leader in the cluster
 ### Prerequirements
 - etcd (v2 API) installed and configured
 - rsync installed
-- 2 nodes that are reachable
+- 3 nodes that are reachable to each other
 
 ### Configure Saturn
