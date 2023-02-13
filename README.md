@@ -30,7 +30,7 @@ _ETCD_LISTEN_PEER_URLS="http://<NODE-IPV4>:2380"
 _ETCD_LISTEN_CLIENT_URLS="http://<NODE-IPV4>:2379"
 _ETCD_INITIAL_ADVERTISE_PEER_URLS="http://<NODE-IPV4>:2380"
 _ETCD_ADVERTISE_CLIENT_URLS="http://<NODE-IPV4>:2379"
-_ETCD_INITIAL_CLUSTER_TOKEN="etcd-PatroniCluster"
+_ETCD_INITIAL_CLUSTER_TOKEN="etcd-saturn"
 _ETCD_INITIAL_CLUSTER_STATE="new"
 _ETCD_INITIAL_CLUSTER="<NODE-1-ETCD_NAME>=http://<Node-1-IPv4>:2380,<NODE-2-ETCD_NAME>=http://<Node-2-IPv4>:2380,<NODE-3-ETCD_NAME>=http://<Node-3-IPv4>:2380"
 _ETCD_HEARTBEAT_INTERVAL=250
@@ -139,7 +139,6 @@ interface="<INTERFACE_FOR_VIP>"
 dataDir="<FULL_PATH_SAMBA_DIR>"
 ```
 
-Run ```systemctl daemon-reload``` and ```systemctl enable saturn.service```. Now start saturn with
-```
+Run ```systemctl daemon-reload``` and ```systemctl enable saturn.service```. Now start saturn with ```
 systemctl start saturn.service
 ```
