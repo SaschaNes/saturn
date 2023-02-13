@@ -124,10 +124,10 @@ node1="<NODE_1_IPv4>"
 node1_hn="<NODE_1_HOSTNAME>"
 
 node2="<NODE_2_IPv4>"
-node1_hn="<NODE_2_HOSTNAME>"
+node2_hn="<NODE_2_HOSTNAME>"
 
 node3="<NODE_3_IPv4>"
-node1_hn="<NODE_2_HOSTNAME>"
+node3_hn="<NODE_2_HOSTNAME>"
 
 # Set details of virtual ip /IP itself, subnet in cidr notation,
 # and the interface that should be used
@@ -139,6 +139,7 @@ interface="<INTERFACE_FOR_VIP>"
 dataDir="<FULL_PATH_SAMBA_DIR>"
 ```
 
-Run ```systemctl daemon-reload``` and ```systemctl enable saturn.service```. Now start saturn with ```
+Run ```systemctl daemon-reload``` and ```systemctl enable saturn.service```. Now start saturn with 
+```
 systemctl start saturn.service
 ```
