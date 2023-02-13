@@ -163,6 +163,9 @@ while true; do
     cryptoCheck
     if [[ $? -eq 0 ]]; then
       syncStandby
+    else
+      demote
+      systemctl stop etcd.service
     fi
   fi
   sleep 1
