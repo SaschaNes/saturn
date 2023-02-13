@@ -6,10 +6,10 @@ node1="<NODE_1_IPv4>"
 node1_hn="<NODE_1_HOSTNAME>"
 
 node2="<NODE_2_IPv4>"
-node1_hn="<NODE_2_HOSTNAME>"
+node2_hn="<NODE_2_HOSTNAME>"
 
 node3="<NODE_3_IPv4>"
-node1_hn="<NODE_2_HOSTNAME>"
+node3_hn="<NODE_2_HOSTNAME>"
 
 # Set details of virtual ip /IP itself, subnet in cidr notation,
 # and the interface that should be used
@@ -121,15 +121,17 @@ function leaderChanged {
 function syncStandby {
   # send changed files with rsync to standby nodes
   # check what node is currently leader and send to the other 2 nodes the data
-  if [ $node1_hn == $(uname -n) ]; then
-    rsync -av --perms --delete $dataDir root@node2:$dataDir >> $rsynclog
-    rsync -av --perms --delete $dataDir root@node3:$dataDir >> $rsynclog
-  if [ $node2_hn == $(uname -n) ]; then
-    rsync -av --perms --delete $dataDir root@node1:$dataDir >> $rsynclog
-    rsync -av --perms --delete $dataDir root@node3:$dataDir >> $rsynclog
-  if [ $node3_hn == $(uname -n) ]; then
-    rsync -av --perms --delete $dataDir root@node1:$dataDir >> $rsynclog
-    rsync -av --perms --delete $dataDir root@node2:$dataDir >> $rsynclog
+  if [ $node1_hn = $(uname -n) ]; then
+    rsync -av --perms --delete $dataDir root@$node2:$dataDir >> $rsynclog
+    rsync -av --perms --delete $dataDir root@$node3:$dataDir >> $rsynclog
+  fi
+  if [ $node2_hn = $(uname -n) ]; then
+    rsync -av --perms --delete $dataDir root@$node1:$dataDir >> $rsynclog
+    rsync -av --perms --delete $dataDir root@$node3:$dataDir >> $rsynclog
+  fi
+  if [ $node3_hn = $(uname -n) ]; then
+    rsync -av --perms --delete $dataDir root@$node1:$dataDir >> $rsynclog
+    rsync -av --perms --delete $dataDir root@$node2:$dataDir >> $rsynclog
   fi
 }
 
