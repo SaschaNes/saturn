@@ -21,7 +21,6 @@ interface="<INTERFACE_FOR_VIP>"
 dataDir="<FULL_PATH_SAMBA_DIR>"
 # ------------------------------------------------------------
 
-
 # Tell the system what ETCD nodes are in the ETCD cluster
 export ETCDCTL_ENDPOINTS="http://$node1:2379,http://$node2:2379,http://$node3:2379"
 
@@ -157,6 +156,12 @@ function demote {
   systemctl stop smbd.service
 }
 
+isLeader
+if [[ $? -eq 0 ]]; then
+  promote
+else
+  demote
+fi
 while true; do
   leaderChanged
   log_func
