@@ -1,6 +1,10 @@
 # Saturn
 High Availability Service for Samba
 
+Tested and supported for:
+- Ubuntu Server 22.04.1 LTS
+- Debian 11
+
 ### What is Saturn?
 Saturn is a service that provides high availability for Samba, a popular open-source file sharing service.
 It leverages the etcd distributed key-value store to get a leader in the cluster.
@@ -139,7 +143,7 @@ interface="<INTERFACE_FOR_VIP>"
 dataDir="<FULL_PATH_SAMBA_DIR>"
 ```
 
-Run ```systemctl daemon-reload``` and ```systemctl enable saturn.service```. Now start saturn with 
+Run ```systemctl daemon-reload``` and ```systemctl enable saturn.service```. Now start saturn with
 ```
 systemctl start saturn.service
 ```
