@@ -9,6 +9,19 @@ Tested and supported for:
 Saturn is a service that provides high availability for Samba, a popular open-source file sharing service.
 It leverages the etcd distributed key-value store to get a leader in the cluster.
 
+### How does Saturn work?
+Saturn uses 3 nodes where following services are installed:
+- etcd
+- samba
+- saturn
+
+The 3 nodes are using etcd as check if all nodes are healthy. Also the script checks what node has the current leader key.
+Here is a little diagram, that shows, how Saturn would run in a complete setup.
+
+![Network diagram with saturn](documentation/diagram.png)
+
+
+
 ### Prerequirements
 - etcd (v2 API) installed and configured
 - rsync installed
@@ -22,6 +35,8 @@ If you are running Ubuntu or Debian, you should be able to install etcd over apt
 ```
 sudo apt install etcd
 ```
+
+All nodes should be able to connect via ssh without a password. So create and copy ssh-keys on all nodes.
 
 After that you will need to configure etcd.
 Navigate to ```/etc/etcd/``` and edit the ```etcd.conf``` file.
@@ -144,6 +159,4 @@ dataDir="<FULL_PATH_SAMBA_DIR>"
 ```
 
 Run ```systemctl daemon-reload``` and ```systemctl enable saturn.service```. Now start saturn with
-```
-systemctl start saturn.service
-```
+```systemctl start saturn.service```
