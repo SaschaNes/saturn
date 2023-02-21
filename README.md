@@ -18,8 +18,9 @@ Saturn uses 3 nodes where following services are installed:
 The 3 nodes are using etcd as check if all nodes are healthy. Also the script checks what node has the current leader key.
 Here is a little diagram, that shows, how Saturn would run in a complete setup.
 
-![Network diagram with saturn](documentation/diagram.png)
-
+<p align="center">
+  <img src="documentation/diagram.png" alt="Netoworkdiagram with Saturn"/>
+</p>
 
 
 ### Prerequirements
