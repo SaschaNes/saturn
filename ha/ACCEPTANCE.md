@@ -6,8 +6,9 @@ and BMC versions. WSL and offline CIB tests are not substitutes.
 
 ## Before testing
 
-- [ ] A restorable backup exists outside the cluster. Complete a restore drill
-      to a separate test system. Replication is not a backup.
+- [ ] The [external backup integration](BACKUP.md) has a restorable copy
+      outside the cluster. Complete a restore drill to a separate test system.
+      Replication is not a backup.
 - [ ] All three Pacemaker members have quorum, all three DRBD copies report
       `UpToDate`, and the cluster is not in maintenance mode.
 - [ ] `stonith-enabled=true`, `no-quorum-policy=stop`, DRBD majority quorum,

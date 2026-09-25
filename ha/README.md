@@ -39,9 +39,9 @@ network interface, or BMC exists. The **production plan keeps strict
    `pcs stonith describe fence_redfish --full`. Redfish uses verified TLS;
    install the BMC certificate authority in the system trust store on all
    nodes. Never disable TLS certificate verification to make fencing work.
-3. A validated offline backup and recovery plan. DRBD replication is not a
-   backup. The legacy `backup_saturn.py` relies on etcd and must **not** be
-   used with this profile until it is migrated to Pacemaker state.
+3. A validated [external backup and recovery plan](BACKUP.md). DRBD
+   replication is not a backup. The legacy `backup_saturn.py` relies on etcd
+   and must **not** be used with this profile.
 4. Identical Samba configuration, share path, UID/GID mapping, ACL/xattr
    support and authentication setup on all nodes. This is active/passive
    Samba, not CTDB: existing SMB sessions and open handles may disconnect
