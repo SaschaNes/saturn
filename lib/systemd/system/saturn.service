@@ -1,17 +1,15 @@
 [Unit]
-Description=saturn service
-After=network.target
-After=network-online.target
+Description=Saturn Samba coordinator (manual failover)
 Wants=network-online.target
+After=network-online.target etcd.service
 
 [Service]
-Type=notify
+Type=simple
 User=root
-
-ExecStart=/usr/bin/saturn.sh
-
+ExecStart=/usr/bin/python3 /usr/lib/saturn/saturn.py run
 Restart=on-failure
 RestartSec=5
+TimeoutStopSec=30
 
 [Install]
 WantedBy=multi-user.target

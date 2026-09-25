@@ -1,0 +1,24 @@
+{
+  "node": "node1",
+  "nodes": {
+    "node1": "192.0.2.11",
+    "node2": "192.0.2.12",
+    "node3": "192.0.2.13"
+  },
+  "endpoints": [
+    "https://192.0.2.11:2379",
+    "https://192.0.2.12:2379",
+    "https://192.0.2.13:2379"
+  ],
+  "ca_file": "/etc/saturn/ca.crt",
+  "client_cert": "/etc/saturn/client.crt",
+  "client_key": "/etc/saturn/client.key",
+  "vip": "192.0.2.20/24",
+  "interface": "ens18",
+  "data_dir": "/data",
+  "require_mount": true,
+  "key_prefix": "/saturn/cluster",
+  "lease_ttl": 30,
+  "poll_interval": 3,
+  "sync_interval": 30
+}
