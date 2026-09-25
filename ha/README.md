@@ -11,9 +11,11 @@ let systemd start Samba independently.** This profile assumes three
 
 The repository contains a **review-only configuration generator**, not an
 installer. It does not execute `pcs`, initialize DRBD, format disks, or handle
-BMC passwords. Offline CIB checks run against Ubuntu 24.04 and 26.04 tools,
-but no three-node DRBD/BMC cluster was available for live failover testing.
-Neither the template nor those checks certify a production installation.
+BMC passwords. Offline CIB checks run against Ubuntu 24.04 and 26.04 tools;
+a [three-VM Ubuntu 24.04 lab](LAB.md) additionally exercised live DRBD,
+Pacemaker, Samba, and **virtual-machine** fencing. No real BMC or three-node
+production cluster was available. Neither the lab nor the offline tests
+certify a production installation.
 
 Run the repository checks with `python3 -m unittest discover -s tests`. The
 CI matrix runs these checks with the installed `pcs`, Pacemaker, DRBD utilities,
@@ -101,7 +103,8 @@ replacement for working STONITH.
 ## Acceptance and operations
 
 Use the [hardware acceptance checklist](ACCEPTANCE.md) before any production
-rollout. Offline tests validate configuration syntax, not end-to-end failover.
+rollout. Offline tests validate configuration syntax; the [virtual lab](LAB.md)
+tests failover with `fence_virsh`, not real BMCs or independent networks.
 
 Test at least: planned primary moves in both directions; abrupt power loss;
 cluster network partition; replication network partition; one failed BMC;

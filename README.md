@@ -8,6 +8,8 @@ Redfish fencing. `ha/render.py` creates a plan that requires operator review;
 `ha/status.py` checks cluster state without changing resources. The plan must
 be adapted to real hardware and pass failure tests before production use.
 This repository cannot install or certify a production cluster by itself.
+The [three-VM lab report](ha/LAB.md) records what was tested and what still
+requires real hardware.
 
 **Legacy/manual mode:** The remainder of this page describes the existing
 etcd/`rsync` coordinator. It must **never run alongside** the Pacemaker
