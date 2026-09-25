@@ -1,0 +1,18 @@
+[Unit]
+Description=Saturn read-only Pacemaker status API
+After=network-online.target pacemaker.service
+Wants=network-online.target
+ConditionPathExists=/etc/saturn/pacemaker-managed
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/python3 /usr/lib/saturn/ha/status.py /etc/saturn/cluster.json --serve --node %H
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+
+[Install]
+WantedBy=multi-user.target

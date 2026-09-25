@@ -1,0 +1,11 @@
+{
+  "nodes": [
+    {"name": "node1", "cluster_ip": "192.0.2.11", "replication_ip": "198.51.100.11", "bmc_ip": "203.0.113.11", "bmc_user": "fencer"},
+    {"name": "node2", "cluster_ip": "192.0.2.12", "replication_ip": "198.51.100.12", "bmc_ip": "203.0.113.12", "bmc_user": "fencer"},
+    {"name": "node3", "cluster_ip": "192.0.2.13", "replication_ip": "198.51.100.13", "bmc_ip": "203.0.113.13", "bmc_user": "fencer"}
+  ],
+  "drbd": {"resource": "saturn_data", "device": "/dev/drbd1000", "backing_device": "/dev/mapper/saturn_data", "port": 7788},
+  "filesystem": {"mount": "/srv/saturn/data", "fstype": "ext4"},
+  "vip": {"address": "192.0.2.100/24", "interface": "ens18"},
+  "fencing": {"agent": "fence_ipmilan", "password_script_dir": "/usr/local/libexec/saturn/fence"}
+}

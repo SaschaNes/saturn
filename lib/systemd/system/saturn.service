@@ -2,6 +2,7 @@
 Description=Saturn Samba coordinator (manual failover)
 Wants=network-online.target
 After=network-online.target etcd.service
+ConditionPathExists=!/etc/saturn/pacemaker-managed
 
 [Service]
 Type=simple

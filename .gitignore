@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+ha/cluster.json
+ha/output/
+*.password
