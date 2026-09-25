@@ -1,18 +1,18 @@
 # Saturn
 
-## Betriebsmodi
+## Operating modes
 
-**Für automatischen Failover:** Das neue [Pacemaker/DRBD-9-Profil](ha/README.md)
-verwendet drei synchrone DRBD-Replikate, Corosync/Pacemaker und getestetes
-IPMI-Fencing. `ha/render.py` erzeugt einen **prüfpflichtigen** DRBD-/Pacemaker-
-Plan und `ha/status.py` prüft den Clusterzustand lesend. Die Konfiguration
-muss an echte Hardware angepasst und mit Ausfalltests freigegeben werden;
-dieses Repository kann einen produktiven Cluster nicht allein installieren.
+**Automatic failover:** The [Pacemaker/DRBD 9 profile](ha/README.md) uses
+three synchronous DRBD replicas, Corosync/Pacemaker, and tested IPMI or
+Redfish fencing. `ha/render.py` creates a plan that requires operator review;
+`ha/status.py` checks cluster state without changing resources. The plan must
+be adapted to real hardware and pass failure tests before production use.
+This repository cannot install or certify a production cluster by itself.
 
-**Legacy-/manueller Modus:** Die folgende Anleitung beschreibt den bisherigen
-etcd-/`rsync`-Koordinator. Er darf **nicht parallel** zum Pacemaker-Profil
-laufen und bietet weiterhin keinen automatischen Failover. Der alte
-`backup_saturn.py` arbeitet ebenfalls nur mit diesem Modus.
+**Legacy/manual mode:** The remainder of this page describes the existing
+etcd/`rsync` coordinator. It must **never run alongside** the Pacemaker
+profile and still has no automatic failover. `backup_saturn.py` supports
+only this legacy mode.
 
 Saturn controls a **single Samba VIP** on a three-node cluster using an etcd v3 lease and an atomic compare-and-swap transaction. It copies files from the active node to the standby nodes with `rsync`.
 

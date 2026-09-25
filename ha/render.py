@@ -62,9 +62,14 @@ def validate(config):
     if not IDENTIFIER.fullmatch(config["vip"]["interface"]):
         raise ValueError("Invalid VIP interface name")
     fence = config["fencing"]
-    if fence["agent"] != "fence_ipmilan":
-        raise ValueError("Only verified IPMI fencing is rendered; Redfish needs a separately tested agent profile")
+    if fence["agent"] not in ("fence_ipmilan", "fence_redfish"):
+        raise ValueError("Only fence_ipmilan and fence_redfish are supported")
     valid_path(fence["password_script_dir"], "password_script_dir")
+    if fence["agent"] == "fence_redfish":
+        for node in nodes:
+            uri = node.get("systems_uri")
+            if not isinstance(uri, str) or not re.fullmatch(r"/redfish/v1/Systems/[A-Za-z0-9_.-]+", uri):
+                raise ValueError("Each Redfish node needs a specific /redfish/v1/Systems/... URI")
     return config
 
 
@@ -101,13 +106,16 @@ def render_plan(config):
              "window; DO NOT format or overwrite existing data based on this plan.",
              "Verify all three disks are UpToDate before enabling Samba resources.", "",
              "## 2. Configure fencing FIRST (run on one cluster node)", "", "```sh",
-             "pcs property set stonith-enabled=true no-quorum-policy=stop"]
+              "pcs property set stonith-enabled=true no-quorum-policy=stop stonith-timeout=120s"]
     for node in nodes:
         name = node["name"]
         secret = config["fencing"]["password_script_dir"] + "/" + name
-        lines += [f'pcs stonith create fence_{name} fence_ipmilan ipaddr={node["bmc_ip"]} '
-                  f'login={node["bmc_user"]} passwd_script={secret} lanplus=1 method=onoff '
-                  f'pcmk_host_list={name} op monitor interval=60s',
+        agent = config["fencing"]["agent"]
+        agent_options = ("lanplus=1 method=onoff" if agent == "fence_ipmilan"
+                         else f'systems_uri={node["systems_uri"]} ssl_secure=1')
+        lines += [f'pcs stonith create fence_{name} {agent} ip={node["bmc_ip"]} '
+                  f'username={node["bmc_user"]} password_script={secret} {agent_options} '
+                  f'pcmk_host_list={name} op monitor interval=60s --agent-validation',
                   f"pcs constraint location fence_{name} avoids {name}"]
     lines += ["```", "", "Stop here and test all three fencing paths in an isolated maintenance",
               "window. Confirm the affected server is really OFF before its resources can",
@@ -117,19 +125,19 @@ def render_plan(config):
               f"pcs -f saturn.cib resource create p_drbd_saturn ocf:linbit:drbd drbd_resource={resource} "
               "op start interval=0s timeout=40s stop interval=0s timeout=100s "
               "monitor interval=31s timeout=20s role=Unpromoted "
-              "monitor interval=29s timeout=20s role=Promoted",
+              "monitor interval=29s timeout=20s role=Promoted --agent-validation",
               "pcs -f saturn.cib resource promotable p_drbd_saturn "
               "meta promoted-max=1 promoted-node-max=1 clone-max=3 clone-node-max=1 notify=true",
               f'pcs -f saturn.cib resource create p_fs_saturn ocf:heartbeat:Filesystem '
               f'device={drbd["device"]} directory={fs["mount"]} fstype=ext4 run_fsck=no '
               'op start interval=0s timeout=60s stop interval=0s timeout=60s '
-              'monitor OCF_CHECK_LEVEL=0 interval=15s timeout=40s',
+              'monitor OCF_CHECK_LEVEL=0 interval=15s timeout=40s --agent-validation',
               "pcs -f saturn.cib resource create p_smb_saturn systemd:smbd "
               "op start interval=0s timeout=60s stop interval=0s timeout=60s "
-              "monitor interval=20s timeout=30s",
+              "monitor interval=20s timeout=30s --agent-validation",
               f'pcs -f saturn.cib resource create p_vip_saturn ocf:heartbeat:IPaddr2 '
               f'ip={vip["address"].split("/")[0]} cidr_netmask={vip["address"].split("/")[1]} '
-              f'nic={vip["interface"]} op monitor interval=20s timeout=20s',
+              f'nic={vip["interface"]} op monitor interval=20s timeout=20s --agent-validation',
               "pcs -f saturn.cib resource group add g_saturn p_fs_saturn p_smb_saturn p_vip_saturn",
               "pcs -f saturn.cib constraint order promote p_drbd_saturn-clone then start g_saturn",
               "pcs -f saturn.cib constraint colocation add g_saturn with p_drbd_saturn-clone "

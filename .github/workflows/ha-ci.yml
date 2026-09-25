@@ -1,0 +1,25 @@
+name: HA configuration checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  offline-cib:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        ubuntu: ["24.04", "26.04"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test Python and offline Pacemaker configuration
+        run: |
+          docker run --rm -v "$PWD:/work:ro" -w /work "ubuntu:${{ matrix.ubuntu }}" bash -euc '
+            apt-get update -qq
+            DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+              python3 pacemaker pcs corosync resource-agents-extra \
+              fence-agents-ipmilan fence-agents-redfish drbd-utils ipmitool
+            python3 -m unittest discover -s tests -v
+            python3 -m json.tool ha/cluster.example.json >/dev/null
+          '

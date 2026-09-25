@@ -2,6 +2,7 @@
 """Read-only local prerequisites for the Pacemaker/DRBD migration."""
 
 import argparse
+import ipaddress
 import json
 import shutil
 import stat
@@ -14,14 +15,25 @@ else:
     from render import validate
 
 
-REQUIRED = ("pcs", "crm_mon", "drbdadm", "systemctl", "fence_ipmilan")
+REQUIRED = ("pcs", "crm_mon", "drbdadm", "systemctl", "ip")
 
 
 def check(config, root=Path("/"), which=shutil.which, run=subprocess.run):
     problems = []
-    for name in REQUIRED:
+    agent = config["fencing"]["agent"]
+    required = REQUIRED + (agent,) + (("ipmitool",) if agent == "fence_ipmilan" else ())
+    for name in required:
         if not which(name):
             problems.append("Missing command: " + name)
+    if which("pcs") and which(agent):
+        metadata = run(["pcs", "stonith", "describe", agent, "--full"],
+                       capture_output=True, text=True, timeout=10)
+        parameters = {line.strip().split()[0] for line in metadata.stdout.splitlines()
+                      if line.startswith("  ") and line.strip()}
+        specific = {"lanplus", "method"} if agent == "fence_ipmilan" else {"systems_uri", "ssl_secure"}
+        missing = ({"ip", "username", "password_script"} | specific) - parameters
+        if metadata.returncode or missing:
+            problems.append("Installed " + agent + " lacks required fencing parameters: " + ", ".join(sorted(missing)))
     for name in ("linbit/drbd", "heartbeat/Filesystem", "heartbeat/IPaddr2"):
         agent = root / "usr/lib/ocf/resource.d" / name
         if not agent.is_file():
@@ -43,13 +55,27 @@ def check(config, root=Path("/"), which=shutil.which, run=subprocess.run):
             except OSError:
                 problems.append("Missing fencing credential component: " + str(path))
     if which("systemctl"):
-        for unit in ("saturn.service", "smbd.service"):
+        for unit in ("saturn.service", "smbd.service", "drbd.service"):
             result = run(["systemctl", "is-enabled", unit], capture_output=True, text=True, timeout=5)
             allowed = ("disabled", "masked", "not-found") if unit == "saturn.service" else ("disabled",)
+            if unit == "drbd.service":
+                allowed = ("disabled", "masked", "not-found", "static")
             if result.stdout.strip() not in allowed:
                 problems.append(unit + " must not start outside Pacemaker")
         if run(["systemctl", "is-active", "--quiet", "saturn.service"], timeout=5).returncode == 0:
             problems.append("Legacy Saturn coordinator is still running")
+        if run(["systemctl", "is-active", "--quiet", "smbd.service"], timeout=5).returncode == 0:
+            problems.append("Samba is already running outside Pacemaker")
+    if which("ip"):
+        result = run(["ip", "-j", "address", "show", "dev", config["vip"]["interface"]],
+                     capture_output=True, text=True, timeout=5)
+        if result.returncode:
+            problems.append("Cannot verify the configured VIP interface")
+        else:
+            vip = ipaddress.ip_interface(config["vip"]["address"]).ip
+            for interface in json.loads(result.stdout):
+                if any(ipaddress.ip_address(entry["local"]) == vip for entry in interface.get("addr_info", [])):
+                    problems.append("VIP is already assigned outside Pacemaker")
     return problems
 
 

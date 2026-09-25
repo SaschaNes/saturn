@@ -13,8 +13,11 @@ class UnsafeCluster(RuntimeError):
     pass
 
 
-def check(xml, expected_nodes):
+def check(xml, expected_nodes, fence_agent="fence_ipmilan"):
     root = ET.fromstring(xml)
+    result = root.find("status")
+    if result is None or result.get("code") != "0":
+        raise UnsafeCluster("Pacemaker did not report a successful status query")
     summary = root.find("summary")
     if summary is None:
         raise UnsafeCluster("Missing Pacemaker summary")
@@ -59,15 +62,15 @@ def check(xml, expected_nodes):
             raise UnsafeCluster(resource_id + " is not colocated with promoted DRBD")
     for node in expected_nodes:
         fencing = [item for item in resources.iter("resource") if item.get("id") == "fence_" + node]
-        if len(fencing) != 1 or fencing[0].get("resource_agent") != "stonith:fence_ipmilan" or fencing[0].get("managed") == "false":
-            raise UnsafeCluster("Missing or incorrect IPMI fencing resource for " + node)
+        if len(fencing) != 1 or fencing[0].get("resource_agent") != "stonith:" + fence_agent or fencing[0].get("managed") == "false":
+            raise UnsafeCluster("Missing or incorrect fencing resource for " + node)
     return {"primary": primary, "quorum": True, "stonith": True, "resources_colocated": True}
 
 
-def active_primary(expected_nodes):
+def active_primary(expected_nodes, fence_agent="fence_ipmilan"):
     result = subprocess.run(["crm_mon", "--output-as=xml"], capture_output=True, text=True,
                             timeout=10, check=True)
-    return check(result.stdout, expected_nodes)
+    return check(result.stdout, expected_nodes, fence_agent)
 
 
 class Handler(http.server.BaseHTTPRequestHandler):
@@ -76,7 +79,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.send_error(404)
             return
         try:
-            report = active_primary(self.server.expected_nodes)
+            report = active_primary(self.server.expected_nodes, self.server.fence_agent)
             report["healthy"] = True
         except (OSError, ValueError, ET.ParseError, subprocess.SubprocessError, UnsafeCluster) as exc:
             report = {"healthy": False, "error": str(exc)}
@@ -96,13 +99,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
         pass
 
 
-def serve(expected_nodes, node, port=8008):
+def serve(expected_nodes, node, port=8008, fence_agent="fence_ipmilan"):
     if node not in expected_nodes:
         raise ValueError("Local node is not listed in the HA configuration")
     server = http.server.ThreadingHTTPServer(("127.0.0.1", port), Handler)
     server.daemon_threads = True
     server.expected_nodes = expected_nodes
     server.node = node
+    server.fence_agent = fence_agent
     return server
 
 
@@ -117,11 +121,12 @@ def main():
         with open(args.config) as stream:
             config = json.load(stream)
         names = [node["name"] for node in config["nodes"]]
+        fence_agent = config["fencing"]["agent"]
         if args.serve:
-            with serve(names, args.node, args.port) as server:
+            with serve(names, args.node, args.port, fence_agent) as server:
                 server.serve_forever()
         else:
-            print(json.dumps(active_primary(names)))
+            print(json.dumps(active_primary(names, fence_agent)))
     except (OSError, ValueError, KeyError, ET.ParseError, subprocess.SubprocessError, UnsafeCluster) as exc:
         parser.exit(1, "Cluster status cannot be trusted: " + str(exc) + "\n")
 
