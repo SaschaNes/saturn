@@ -72,6 +72,10 @@ class RenderTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             render.validate(bad)
         bad = copy.deepcopy(CONFIG)
+        bad["cluster_name"] = "invalid cluster; command"
+        with self.assertRaises(ValueError):
+            render.validate(bad)
+        bad = copy.deepcopy(CONFIG)
         bad["nodes"][0]["cluster_ip"] = "127.0.0.1"
         with self.assertRaises(ValueError):
             render.validate(bad)

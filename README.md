@@ -4,10 +4,12 @@
 
 **Automatic failover:** The [Pacemaker/DRBD 9 profile](ha/README.md) uses
 three synchronous DRBD replicas, Corosync/Pacemaker, and tested IPMI or
-Redfish fencing. `ha/render.py` creates a plan that requires operator review;
-`ha/status.py` checks cluster state without changing resources. The plan must
-be adapted to real hardware and pass failure tests before production use.
-This repository cannot install or certify a production cluster by itself.
+Redfish fencing. The [interactive installer](ha/INSTALL.md) stages a new
+three-node cluster with strict SSH checks and mandatory hardware gates;
+`ha/render.py` still creates a plan for review, and `ha/status.py` reads cluster
+state without changing resources. The installer cannot format/migrate storage
+or certify a production cluster by itself. Real-hardware failure tests are
+required before production use.
 The [three-VM lab report](ha/LAB.md) records what was tested and what still
 requires real hardware.
 See the [dependency review](ha/DEPENDENCIES.md) for dated Ubuntu package

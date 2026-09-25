@@ -9,9 +9,12 @@ profile alongside the legacy daemon or its `rsync` replication, and do not
 let systemd start Samba independently.** This profile assumes three
 *diskful* DRBD 9 nodes with the same backing-device path and independent BMCs.
 
-The repository contains a **review-only configuration generator**, not an
-installer. It does not execute `pcs`, initialize DRBD, format disks, or handle
-BMC passwords. Offline CIB checks run against Ubuntu 24.04 and 26.04 tools;
+The repository contains a **review-only configuration generator** and a
+[staged, interactive installer](INSTALL.md) for a new three-node cluster. The
+installer can configure Pacemaker and fencing after SSH and package checks,
+but never initializes/formats storage or substitutes for real BMC tests. The
+generator alone does not execute `pcs` or handle BMC passwords. Offline CIB
+checks run against Ubuntu 24.04 and 26.04 tools;
 a [three-VM Ubuntu 24.04 lab](LAB.md) additionally exercised live DRBD,
 Pacemaker, Samba, and **virtual-machine** fencing. No real BMC or three-node
 production cluster was available. Neither the lab nor the offline tests

@@ -1,4 +1,5 @@
 {
+  "cluster_name": "saturn",
   "nodes": [
     {"name": "node1", "cluster_ip": "192.0.2.11", "replication_ip": "198.51.100.11", "bmc_ip": "203.0.113.11", "bmc_user": "fencer"},
     {"name": "node2", "cluster_ip": "192.0.2.12", "replication_ip": "198.51.100.12", "bmc_ip": "203.0.113.12", "bmc_user": "fencer"},

@@ -28,6 +28,11 @@ def valid_ip(value):
 
 
 def validate(config):
+    if not isinstance(config, dict):
+        raise ValueError("Configuration must be a JSON object")
+    if not isinstance(config.get("cluster_name", "saturn"), str) or not IDENTIFIER.fullmatch(
+            config.get("cluster_name", "saturn")):
+        raise ValueError("Invalid cluster name")
     nodes = config["nodes"]
     if not isinstance(nodes, list) or len(nodes) != 3:
         raise ValueError("Exactly three diskful nodes are required")
