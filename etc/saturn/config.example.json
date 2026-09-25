@@ -18,7 +18,9 @@
   "data_dir": "/data",
   "require_mount": true,
   "key_prefix": "/saturn/cluster",
-  "lease_ttl": 30,
+  "lease_ttl": 60,
   "poll_interval": 3,
-  "sync_interval": 30
+  "sync_interval": 30,
+  "api_listen": "127.0.0.1",
+  "api_port": 8008
 }

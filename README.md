@@ -32,7 +32,21 @@ If etcd is unavailable, the lease cannot be refreshed, promotion fails, or the s
 
 For a takeover: isolate or power off the previous primary and verify its VIP/Samba are down; confirm that etcd no longer has an `owner`; inspect replication status and select/repair the most up-to-date standby. Then check `status` and approve *on that node*. **Never approve a standby just because the lease expired.** Old clients and a returning former primary must not write to the share. To restore the old primary, reconcile its files from the current primary before letting it join as standby. The new primary's first `rsync --delete` will otherwise overwrite stale/unique files on that node.
 
-On every leader renewal, the coordinator checks ownership via an etcd transaction; changes in ownership or connectivity trigger demotion. `last_owner` remains in etcd for operator visibility. All other nodes remain in standby until explicitly approved. A stale, unused approval can be removed with `python3 /usr/lib/saturn/saturn.py cancel-approval`. Use `journalctl -u saturn.service` to inspect coordination and replication failures. Each lease is 30 seconds by default; successful replication is **not** a guarantee that all Samba writes are durable on all nodes.
+On every leader renewal, the coordinator checks ownership via an etcd transaction; changes in ownership or connectivity trigger demotion. `last_owner` remains in etcd for operator visibility. All other nodes remain in standby until explicitly approved. A stale, unused approval can be removed with `python3 /usr/lib/saturn/saturn.py cancel-approval`. Use `journalctl -u saturn.service` to inspect coordination and replication failures. Each lease is 60 seconds by default; successful replication is **not** a guarantee that all Samba writes are durable on all nodes.
+
+### Planned switchover
+
+For **planned** maintenance, make sure clients have stopped writing, the target's Saturn service is running, its share filesystem is mounted, and Samba is inactive there. On the current primary:
+
+```sh
+python3 /usr/lib/saturn/saturn.py switchover --target node2
+```
+
+The primary observes the request, stops Samba and removes its VIP, then runs a **final `rsync`** to the target while continuing to renew its etcd lease. Only after the copy succeeds does it atomically release ownership and issue a one-use approval for the target. The target acquires its own lease before starting Samba. A failed final copy does **not** approve the target; investigate and recover manually. This is not automatic failover from a crashed or partitioned primary. Never use it while other processes can write to the share outside Samba. A stale, unconsumed request can be removed with `python3 /usr/lib/saturn/saturn.py cancel-switchover` after inspecting cluster state.
+
+### Local status API
+
+Each daemon serves a read-only status API on `127.0.0.1:8008` (configurable port). `GET /status` returns the local role, recent etcd connectivity, and per-target last successful replication times. `GET /health`, `/primary`, and `/standby` return HTTP 200 only when the corresponding local state is recently validated; otherwise they return 503. For example, `curl -fsS http://127.0.0.1:8008/primary`. **`/standby` does not certify replication freshness or eligibility for failover.** The API binds only to loopback and does not perform administrative actions.
 
 ## Backups
 
