@@ -12,7 +12,7 @@ jobs:
       matrix:
         ubuntu: ["24.04", "26.04"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Test Python and offline Pacemaker configuration
         run: |
           docker run --rm -v "$PWD:/work:ro" -w /work "ubuntu:${{ matrix.ubuntu }}" bash -euc '
