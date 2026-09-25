@@ -4,6 +4,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   offline-cib:
     runs-on: ubuntu-24.04
@@ -12,7 +15,9 @@ jobs:
       matrix:
         ubuntu: ["24.04", "26.04"]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 (Node.js 24)
+        with:
+          persist-credentials: false
       - name: Test Python and offline Pacemaker configuration
         run: |
           docker run --rm -v "$PWD:/work:ro" -w /work "ubuntu:${{ matrix.ubuntu }}" bash -euc '

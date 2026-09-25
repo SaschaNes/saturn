@@ -10,6 +10,8 @@ be adapted to real hardware and pass failure tests before production use.
 This repository cannot install or certify a production cluster by itself.
 The [three-VM lab report](ha/LAB.md) records what was tested and what still
 requires real hardware.
+See the [dependency review](ha/DEPENDENCIES.md) for dated Ubuntu package
+candidates and security-update procedures.
 
 **Legacy/manual mode:** The remainder of this page describes the existing
 etcd/`rsync` coordinator. It must **never run alongside** the Pacemaker
@@ -22,7 +24,10 @@ Saturn controls a **single Samba VIP** on a three-node cluster using an etcd v3 
 
 ## Requirements
 
-- Three Linux hosts, Python 3.9+, etcd v3 with the gRPC-JSON gateway enabled, Samba, `rsync`, OpenSSH and `iproute2`.
+- Three Linux hosts running supported Ubuntu 24.04 or 26.04 packages (including
+  their security updates), the distribution's supported Python 3 (3.12 on
+  24.04; 3.14 on 26.04), etcd v3 with the gRPC-JSON gateway enabled, Samba,
+  `rsync`, OpenSSH and `iproute2`. Do not deploy with end-of-life Python 3.9.
 - A three-member etcd cluster with quorum, preferably authenticated TLS endpoints. All nodes need gateway access to etcd; etcd must not be exposed to untrusted networks.
 - Passwordless **root SSH** from the primary to the standby nodes for replication and from the backup host to cluster nodes. Pin SSH host keys in `known_hosts`. Limit these credentials to trusted machines.
 - The same Samba configuration, path, UID/GID mapping, ACL and xattr support on all nodes. Only the active node may accept writes. The share directory must actually contain the intended data before approving a takeover.

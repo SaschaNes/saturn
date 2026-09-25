@@ -17,6 +17,9 @@ Pacemaker, Samba, and **virtual-machine** fencing. No real BMC or three-node
 production cluster was available. Neither the lab nor the offline tests
 certify a production installation.
 
+Review the [dependency and security-update inventory](DEPENDENCIES.md)
+before selecting production packages or applying cluster upgrades.
+
 Run the repository checks with `python3 -m unittest discover -s tests`. The
 CI matrix runs these checks with the installed `pcs`, Pacemaker, DRBD utilities,
 and fencing-agent metadata on Ubuntu 24.04 and 26.04. Offline CIB checks
@@ -28,10 +31,12 @@ network interface, or BMC exists. The **production plan keeps strict
 
 1. Ubuntu 24.04 or 26.04, Pacemaker, Corosync, `pcs`, `resource-agents-extra`,
    Samba, the `ocf:linbit:drbd` agent, DRBD 9 userspace and a DRBD 9 kernel
-   module on every node. **For Ubuntu 26.04, the LINBIT PPA was incomplete as
-   of September 2026; use the LINBIT customer repository or verify an
-   equivalent supported package source.** Do not use an unverified in-kernel
-   DRBD version in place of DRBD 9. Install `fence-agents-ipmilan` plus
+   module on every node. The LINBIT PPA currently lists DRBD DKMS packages
+   for both releases, but its `drbd-utils` build is a **release candidate**.
+   Select a supported, stable package source and verify its kernel-module
+   compatibility and security-update policy before production deployment.
+   Do not use an unverified in-kernel DRBD version in place of DRBD 9.
+   Install `fence-agents-ipmilan` plus
    `ipmitool` for IPMI, or `fence-agents-redfish` for Redfish.
 2. Three independent backing devices, a dedicated replication network,
    synchronized clocks, working cluster quorum, and independent management
